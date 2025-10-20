@@ -1,4 +1,4 @@
-import Elysia from "elysia";
+import Elysia, { t } from "elysia";
 import {
   signinDocs,
   signupDocs,
@@ -40,6 +40,7 @@ export const authRoutes = new Elysia({
     {
       detail: signinDocs,
       body: signinBody,
+      response: t.Object({}),
     },
   )
   .post(
