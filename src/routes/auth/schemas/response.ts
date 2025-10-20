@@ -24,7 +24,20 @@ const signupResponse = t.Object({
   }),
 });
 
-const getMeResponse = t.Omit(UserPlain, ["password"]);
+const getMeResponse = t.Object({
+  id: t.String(),
+  name: t.String(),
+  email: t.String(),
+  password: t.String(),
+  role: t.Union([t.Literal("Admin"), t.Literal("User")], {
+    additionalProperties: false,
+  }),
+  createdAt: t.Date(),
+  updatedAt: t.Date(),
+  selectedOrganizationSlug: t.Optional(t.String()),
+  selectedBranchSlug: t.Optional(t.String()),
+});
+
 const signoutResponse = t.Null();
 const refreshTokensResponse = t.Null();
 const switchOrgResponse = t.Null();

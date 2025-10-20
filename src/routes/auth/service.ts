@@ -10,6 +10,7 @@ import Response from "@src/utils/global-response";
 import db from "@src/utils/db";
 import ApiError from "@src/utils/global-error";
 import { ElysiaCookie, Cookie } from "elysia/dist/cookies";
+import { $Enums, User } from "@prisma/client";
 
 export const signup = async (data: Static<typeof signupBody>) => {
   const { email, name, password } = data;
@@ -80,13 +81,104 @@ export const signout = async (
   };
 };
 
-export const refreshTokens = async () => {};
+export const refreshTokens = async () => {
+  return {
+    success: true,
+    message: "Refreshed tokens successfully.",
+    data: null,
+  };
+};
 
-export const me = async () => {};
+export const me = async (
+  data:
+    | {
+        readonly selectedOrganizationSlug: string | undefined;
+        readonly selectedBranchSlug: string | undefined;
+        readonly name: string;
+        readonly email: string;
+        readonly password: string;
+        readonly id: string;
+        readonly role: $Enums.UserRole;
+        readonly createdAt: Date;
+        readonly updatedAt: Date;
+      }
+    | undefined,
+) => {
+  if (!data?.id) throw new ApiError("User Doesnt Exists, Unautherized call");
 
-export const switchOrg = async (data: Static<typeof switchOrgBody>) => {};
+  return {
+    success: true,
+    message: "user details fetched successfully",
+    data: {
+      ...data,
+      selectedOrganizationSlug: data.selectedOrganizationSlug,
+      selectedBranchSlug: data.selectedBranchSlug,
+    },
+  };
+};
 
-export const switchBranch = async (data: Static<typeof switchBranchBody>) => {};
+export const userExistsInThisOrg = async (
+  user: User | undefined,
+  orgSlug: string,
+) => {
+  if (!user) throw new ApiError("User Doesnt Exists, Unautherized call");
+
+  // check if user has membership inside org with this slug
+  const membership = await db.branchMembership.findFirst({
+    where: {
+      userId: user.id,
+      branch: {
+        organization: {
+          slug: orgSlug,
+        },
+      },
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  if (!membership?.id)
+    throw new ApiError("User dont have access to this organization.");
+};
+
+export const switchOrg = async (data: Static<typeof switchOrgBody>) => {
+  return {
+    success: true,
+    message: "Organization selected successfully.",
+    data: null,
+  };
+};
+
+export const userExistsInThisBranch = async (
+  user: User | undefined,
+  branchSlug: string,
+) => {
+  if (!user) throw new ApiError("User Doesnt Exists, Unautherized call");
+
+  // check if user has membership with this branch
+  const membership = await db.branchMembership.findFirst({
+    where: {
+      userId: user.id,
+      branch: {
+        slug: branchSlug,
+      },
+    },
+    select: {
+      id: true,
+    },
+  });
+  if (!membership?.id)
+    throw new ApiError("User dont have access to this branch.");
+};
+
+export const switchBranch = async (data: Static<typeof switchBranchBody>) => {
+  return {
+    success: true,
+    message: "Branch selected successfully.",
+    data: null,
+  };
+};
 
 export const getBranches = async () => {};
 

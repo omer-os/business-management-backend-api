@@ -35,18 +35,16 @@ export const signinBody = t.Object({
 });
 
 export const switchOrgBody = t.Object({
-  organizationId: t.String({
-    format: "uuid",
-    description: "Target organization UUID",
-    examples: ["9f1a3b4c-2d7e-4c5f-b6a1-2f6b0a4e1b8f"],
+  organizationSlug: t.String({
+    description: "Target organization Slug",
+    examples: ["omaro-llc"],
   }),
 });
 
 export const switchBranchBody = t.Object({
-  branchId: t.String({
-    format: "uuid",
-    description: "Target branch UUID",
-    examples: ["c7d9a2b3-5e6f-4a8d-9c0e-2b3f1d7e4a5c"],
+  branchSlug: t.String({
+    description: "Target branch slug",
+    examples: ["branch1"],
   }),
 });
 

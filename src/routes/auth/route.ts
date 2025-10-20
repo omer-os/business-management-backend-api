@@ -26,6 +26,8 @@ import {
   signup,
   switchBranch,
   switchOrg,
+  userExistsInThisBranch,
+  userExistsInThisOrg,
 } from "./service";
 import Response from "@src/utils/global-response";
 import { jwt } from "@elysiajs/jwt";
@@ -42,12 +44,12 @@ import {
 } from "./schemas/response";
 import { UserRole } from "prisma/prismabox/UserRole";
 import ApiError from "@src/utils/global-error";
+import { authPlugin } from "@src/plugins/auth-plugin";
 
 export const authRoutes = new Elysia({
   prefix: "/auth",
   tags: ["auth"],
   cookie: {
-    maxAge: 10,
     secure: true,
     httpOnly: true,
   },
@@ -59,6 +61,8 @@ export const authRoutes = new Elysia({
       schema: t.Object({
         sub: t.String(),
         role: UserRole,
+        selectedOrganizationSlug: t.Optional(t.String()),
+        selectedBranchSlug: t.Optional(t.String()),
       }),
       exp: "1h",
     }),
@@ -70,8 +74,10 @@ export const authRoutes = new Elysia({
       schema: t.Object({
         sub: t.String(),
         role: UserRole,
+        selectedOrganizationSlug: t.Optional(t.String()),
+        selectedBranchSlug: t.Optional(t.String()),
       }),
-      exp: 5,
+      exp: "5d",
     }),
   )
   .post(
@@ -96,9 +102,11 @@ export const authRoutes = new Elysia({
 
       accessToken.set({
         value: signedAccessToken.toString(),
+        maxAge: 60 * 60,
       });
       refreshToken.set({
         value: signedRefreshToken.toString(),
+        maxAge: 5 * 24 * 60 * 60,
       });
 
       return user;
@@ -133,25 +141,38 @@ export const authRoutes = new Elysia({
   .get(
     "/refresh-tokens",
     async ({ jwt, refreshJwt, cookie: { accessToken, refreshToken } }) => {
-      // const token = refreshToken.value;
-      // if (!token) throw new ApiError("Refresh token missing", 401);
+      const token = refreshToken.value;
+      if (!token) throw new ApiError("Refresh token missing");
 
-      // const payload = await refreshJwt.verify(token);
-      // if (!payload) throw new ApiError("Invalid or expired refresh token", 401);
+      const payload = await refreshJwt.verify(token.toString());
+      if (!payload) throw new ApiError("Invalid or expired refresh token");
 
-      // const newAccessPayload = { sub: payload.sub, role: payload.role };
-      // const newRefreshPayload = { sub: payload.sub, role: payload.role };
+      const newSignedAccessToken = await jwt.sign({
+        sub: payload.sub,
+        role: payload.role,
+        selectedBranchSlug: payload.selectedBranchSlug,
+        selectedOrganizationSlug: payload.selectedOrganizationSlug,
+      });
+      if (!newSignedAccessToken)
+        throw new ApiError("Error while trying to sign new access token");
 
-      // const newSignedAccessToken = await jwt.sign(newAccessPayload);
-      // if (!newSignedAccessToken)
-      //   throw new ApiError("Error while trying to sign new access token");
+      const newSignedRefreshToken = await refreshJwt.sign({
+        sub: payload.sub,
+        role: payload.role,
+        selectedBranchSlug: payload.selectedBranchSlug,
+        selectedOrganizationSlug: payload.selectedOrganizationSlug,
+      });
+      if (!newSignedRefreshToken)
+        throw new ApiError("Error while trying to sign new refresh token");
 
-      // const newSignedRefreshToken = await refreshJwt.sign(newRefreshPayload);
-      // if (!newSignedRefreshToken)
-      //   throw new ApiError("Error while trying to sign new refresh token");
-
-      // accessToken.set({ value: newSignedAccessToken.toString() });
-      // refreshToken.set({ value: newSignedRefreshToken.toString() });
+      accessToken.set({
+        value: newSignedAccessToken.toString(),
+        maxAge: 60 * 60,
+      });
+      refreshToken.set({
+        value: newSignedRefreshToken.toString(),
+        maxAge: 5 * 24 * 60 * 60,
+      });
 
       return await refreshTokens();
     },
@@ -160,10 +181,12 @@ export const authRoutes = new Elysia({
       response: Response(refreshTokensResponse),
     },
   )
+
+  .use(authPlugin)
   .get(
     "/me",
-    async () => {
-      return await me();
+    async ({ user }) => {
+      return await me(user);
     },
     {
       detail: meDocs,
@@ -172,7 +195,38 @@ export const authRoutes = new Elysia({
   )
   .post(
     "/switch-org",
-    async ({ body }) => {
+    async ({
+      body,
+      jwt,
+      refreshJwt,
+      cookie: { accessToken, refreshToken },
+      user,
+    }) => {
+      if (!user) throw new ApiError("Unautherized.");
+
+      await userExistsInThisOrg(user, body.organizationSlug);
+
+      const newPayload = {
+        sub: user.id,
+        role: user.role,
+        selectedOrganizationSlug: body.organizationSlug,
+      };
+
+      const newAccessToken = await jwt.sign(newPayload);
+      const newRefreshToken = await refreshJwt.sign(newPayload);
+
+      if (!newAccessToken || !newRefreshToken)
+        throw new ApiError("Error while trying to sign new tokens.");
+
+      accessToken.set({
+        value: newAccessToken.toString(),
+        maxAge: 60 * 60,
+      });
+      refreshToken.set({
+        value: newRefreshToken.toString(),
+        maxAge: 5 * 24 * 60 * 60,
+      });
+
       return await switchOrg(body);
     },
     {
@@ -183,7 +237,41 @@ export const authRoutes = new Elysia({
   )
   .post(
     "/switch-branch",
-    async ({ body }) => {
+    async ({
+      body,
+      jwt,
+      refreshJwt,
+      cookie: { accessToken, refreshToken },
+      user,
+    }) => {
+      if (!user) throw new ApiError("Unautherized.");
+      if (!user.selectedOrganizationSlug)
+        throw new ApiError("you need to select organization first.");
+
+      await userExistsInThisBranch(user, body.branchSlug);
+
+      const newPayload = {
+        sub: user.id,
+        role: user.role,
+        selectedOrganizationSlug: user.selectedOrganizationSlug,
+        selectedBranchSlug: body.branchSlug,
+      };
+
+      const newAccessToken = await jwt.sign(newPayload);
+      const newRefreshToken = await refreshJwt.sign(newPayload);
+
+      if (!newAccessToken || !newRefreshToken)
+        throw new ApiError("Error while trying to sign new tokens.");
+
+      accessToken.set({
+        value: newAccessToken.toString(),
+        maxAge: 60 * 60,
+      });
+      refreshToken.set({
+        value: newRefreshToken.toString(),
+        maxAge: 5 * 24 * 60 * 60,
+      });
+
       return await switchBranch(body);
     },
     {
