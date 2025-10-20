@@ -1,8 +1,10 @@
 import { openapi } from "@elysiajs/openapi";
 import { Elysia } from "elysia";
+import AllRoutes from "./routes/all-routes";
 
 const app = new Elysia()
   .get("/", () => "Hello Elysia")
+  .use(AllRoutes)
   .use(
     openapi({
       documentation: {
