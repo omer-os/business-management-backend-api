@@ -1,8 +1,17 @@
 import { openapi } from "@elysiajs/openapi";
 import { Elysia } from "elysia";
 import AllRoutes from "./routes/all-routes";
+import { rateLimit } from "elysia-rate-limit";
+import { logger } from "@bogeychan/elysia-logger";
 
 const app = new Elysia()
+  .use(logger({}))
+  .use(
+    rateLimit({
+      max: 50,
+      duration: 60000,
+    }),
+  )
   .onError(({ code, error, status }) => {
     if (code === "VALIDATION") {
       // console.log();
@@ -20,7 +29,6 @@ const app = new Elysia()
       };
     }
   })
-  .use(AllRoutes)
   .use(
     openapi({
       documentation: {
@@ -39,6 +47,9 @@ const app = new Elysia()
       path: "/docs",
     }),
   )
+
+  .use(AllRoutes)
+
   .listen(3000);
 
 console.log(
