@@ -180,6 +180,50 @@ export const switchBranch = async (data: Static<typeof switchBranchBody>) => {
   };
 };
 
-export const getBranches = async () => {};
+export const getBranches = async (user: User | undefined) => {
+  if (!user) throw new ApiError("User Doesnt Exists, Unautherized call");
 
-export const getOrgs = async () => {};
+  // get all branches that have this user inside it, then show these branches organizations, filter out duplications as well
+  const membership = await db.branchMembership.findMany({
+    where: {
+      userId: user.id,
+    },
+    select: {
+      branch: true,
+    },
+  });
+
+  const branches = membership?.map((i) => i.branch);
+
+  return {
+    success: true,
+    message: "Branches listed successfully",
+    data: branches,
+  };
+};
+
+export const getOrgs = async (user: User | undefined) => {
+  if (!user) throw new ApiError("User Doesnt Exists, Unautherized call");
+
+  // get all branches that have this user inside it, then show these branches organizations, filter out duplications as well
+  const membership = await db.branchMembership.findMany({
+    where: {
+      userId: user.id,
+    },
+    select: {
+      branch: {
+        include: {
+          organization: true,
+        },
+      },
+    },
+  });
+
+  const orgs = membership?.map((i) => i.branch.organization);
+
+  return {
+    success: true,
+    message: "Organizations listed successfully",
+    data: orgs,
+  };
+};

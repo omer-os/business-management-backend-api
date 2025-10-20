@@ -282,8 +282,8 @@ export const authRoutes = new Elysia({
   )
   .get(
     "/branches",
-    async () => {
-      return await getBranches();
+    async ({ user }) => {
+      return await getBranches(user);
     },
     {
       detail: branchesDocs,
@@ -292,8 +292,8 @@ export const authRoutes = new Elysia({
   )
   .get(
     "/orgs",
-    async () => {
-      return await getOrgs();
+    async ({ user }) => {
+      return await getOrgs(user);
     },
     {
       detail: orgsDocs,
