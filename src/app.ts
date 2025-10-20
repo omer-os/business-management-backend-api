@@ -3,7 +3,23 @@ import { Elysia } from "elysia";
 import AllRoutes from "./routes/all-routes";
 
 const app = new Elysia()
-  .get("/", () => "Hello Elysia")
+  .onError(({ code, error, status }) => {
+    if (code === "VALIDATION") {
+      // console.log();
+      return {
+        success: false,
+        message: `Validation Error, ${error.all.map((i) => i.summary).join(", ")}`,
+        data: null,
+      };
+    }
+    if (code === "UNKNOWN") {
+      return {
+        success: false,
+        message: `${error.message}`,
+        data: null,
+      };
+    }
+  })
   .use(AllRoutes)
   .use(
     openapi({

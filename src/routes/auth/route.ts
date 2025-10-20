@@ -28,6 +28,7 @@ import {
   switchOrg,
 } from "./service";
 import Response from "@src/utils/global-response";
+import { jwt } from "@elysiajs/jwt";
 import {
   signinResponse,
   signupResponse,
@@ -39,15 +40,68 @@ import {
   listOrgsResponse,
   getMeResponse,
 } from "./schemas/response";
+import { UserRole } from "prisma/prismabox/UserRole";
+import ApiError from "@src/utils/global-error";
 
 export const authRoutes = new Elysia({
   prefix: "/auth",
   tags: ["auth"],
+  cookie: {
+    maxAge: 10,
+    secure: true,
+    httpOnly: true,
+  },
 })
+  .use(
+    jwt({
+      name: "jwt",
+      secret: Bun.env.JWT_SECERET!,
+      schema: t.Object({
+        sub: t.String(),
+        role: UserRole,
+      }),
+      exp: "1h",
+    }),
+  )
+  .use(
+    jwt({
+      name: "refreshJwt",
+      secret: Bun.env.JWT_SECERET!,
+      schema: t.Object({
+        sub: t.String(),
+        role: UserRole,
+      }),
+      exp: 5,
+    }),
+  )
   .post(
     "/sign-in",
-    async ({ body }) => {
-      return await signin(body);
+    async ({
+      body,
+      jwt,
+      refreshJwt,
+      cookie: { accessToken, refreshToken },
+    }) => {
+      const user = await signin(body);
+
+      const payload = { sub: user.data.id, role: user.data.role };
+
+      const signedAccessToken = await jwt.sign(payload);
+      if (!signedAccessToken)
+        throw new ApiError("Error while trying to sign access token");
+
+      const signedRefreshToken = await refreshJwt.sign(payload);
+      if (!signedRefreshToken)
+        throw new ApiError("Error while trying to sign refresh token");
+
+      accessToken.set({
+        value: signedAccessToken.toString(),
+      });
+      refreshToken.set({
+        value: signedRefreshToken.toString(),
+      });
+
+      return user;
     },
     {
       detail: signinDocs,
@@ -68,8 +122,8 @@ export const authRoutes = new Elysia({
   )
   .get(
     "/sign-out",
-    async () => {
-      return await signout();
+    async ({ cookie: { accessToken, refreshToken } }) => {
+      return await signout(accessToken, refreshToken);
     },
     {
       detail: signoutDocs,
@@ -78,7 +132,27 @@ export const authRoutes = new Elysia({
   )
   .get(
     "/refresh-tokens",
-    async () => {
+    async ({ jwt, refreshJwt, cookie: { accessToken, refreshToken } }) => {
+      // const token = refreshToken.value;
+      // if (!token) throw new ApiError("Refresh token missing", 401);
+
+      // const payload = await refreshJwt.verify(token);
+      // if (!payload) throw new ApiError("Invalid or expired refresh token", 401);
+
+      // const newAccessPayload = { sub: payload.sub, role: payload.role };
+      // const newRefreshPayload = { sub: payload.sub, role: payload.role };
+
+      // const newSignedAccessToken = await jwt.sign(newAccessPayload);
+      // if (!newSignedAccessToken)
+      //   throw new ApiError("Error while trying to sign new access token");
+
+      // const newSignedRefreshToken = await refreshJwt.sign(newRefreshPayload);
+      // if (!newSignedRefreshToken)
+      //   throw new ApiError("Error while trying to sign new refresh token");
+
+      // accessToken.set({ value: newSignedAccessToken.toString() });
+      // refreshToken.set({ value: newSignedRefreshToken.toString() });
+
       return await refreshTokens();
     },
     {
