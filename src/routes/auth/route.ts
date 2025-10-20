@@ -27,6 +27,18 @@ import {
   switchBranch,
   switchOrg,
 } from "./service";
+import Response from "@src/utils/global-response";
+import {
+  signinResponse,
+  signupResponse,
+  signoutResponse,
+  refreshTokensResponse,
+  switchOrgResponse,
+  switchBranchResponse,
+  listBranchesResponse,
+  listOrgsResponse,
+  getMeResponse,
+} from "./schemas/response";
 
 export const authRoutes = new Elysia({
   prefix: "/auth",
@@ -40,7 +52,7 @@ export const authRoutes = new Elysia({
     {
       detail: signinDocs,
       body: signinBody,
-      response: t.Object({}),
+      response: Response(signinResponse),
     },
   )
   .post(
@@ -51,28 +63,38 @@ export const authRoutes = new Elysia({
     {
       detail: signupDocs,
       body: signupBody,
+      response: Response(signupResponse),
     },
   )
   .get(
     "/sign-out",
-    async ({ body }) => {
+    async () => {
       return await signout();
     },
-    { detail: signoutDocs },
+    {
+      detail: signoutDocs,
+      response: Response(signoutResponse),
+    },
   )
   .get(
     "/refresh-tokens",
-    async ({ body }) => {
+    async () => {
       return await refreshTokens();
     },
-    { detail: refreshDocs },
+    {
+      detail: refreshDocs,
+      response: Response(refreshTokensResponse),
+    },
   )
   .get(
     "/me",
-    async ({ body }) => {
+    async () => {
       return await me();
     },
-    { detail: meDocs },
+    {
+      detail: meDocs,
+      response: Response(getMeResponse),
+    },
   )
   .post(
     "/switch-org",
@@ -82,6 +104,7 @@ export const authRoutes = new Elysia({
     {
       detail: switchOrgDocs,
       body: switchOrgBody,
+      response: Response(switchOrgResponse),
     },
   )
   .post(
@@ -92,19 +115,26 @@ export const authRoutes = new Elysia({
     {
       detail: switchBranchDocs,
       body: switchBranchBody,
+      response: Response(switchBranchResponse),
     },
   )
   .get(
     "/branches",
-    async ({ body }) => {
+    async () => {
       return await getBranches();
     },
-    { detail: branchesDocs },
+    {
+      detail: branchesDocs,
+      response: Response(listBranchesResponse),
+    },
   )
   .get(
     "/orgs",
-    async ({ body }) => {
+    async () => {
       return await getOrgs();
     },
-    { detail: orgsDocs },
+    {
+      detail: orgsDocs,
+      response: Response(listOrgsResponse),
+    },
   );

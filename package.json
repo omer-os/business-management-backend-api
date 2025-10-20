@@ -10,7 +10,8 @@
     "@elysiajs/jwt": "^1.4.0",
     "@elysiajs/openapi": "^1.4.11",
     "@prisma/client": "^6.17.1",
-    "elysia": "latest"
+    "elysia": "latest",
+    "prismabox": "^1.1.25"
   },
   "devDependencies": {
     "bun-types": "latest",

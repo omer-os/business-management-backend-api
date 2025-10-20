@@ -6,10 +6,34 @@ import {
   switchOrgBody,
   switchBranchBody,
 } from "./schemas/request-body";
+import Response from "@src/utils/global-response";
+import { signinResponse } from "./schemas/response";
 
-export const signup = async (data: Static<typeof signupBody>) => {};
+export const signup = async (data: Static<typeof signupBody>) => {
+  return {
+    success: true,
+    message: "",
+    data: {
+      email: "s",
+      id: "s",
+      name: "s",
+    },
+  };
+};
 
-export const signin = async (data: Static<typeof signinBody>) => {};
+export const signin = async (data: Static<typeof signinBody>) => {
+  throw Error("something bad happened");
+
+  return {
+    success: true,
+    message: "",
+    data: {
+      email: "s",
+      id: "s",
+      name: "s",
+    },
+  };
+};
 
 export const signout = async () => {};
 
