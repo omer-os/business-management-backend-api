@@ -45,13 +45,12 @@ export const switchBranchDocs: DocumentDecoration = {
 
 export const branchesDocs: DocumentDecoration = {
   summary: "List branches",
-  description:
-    "Retrieve list of branches available to the current organization",
+  description: "List of branches linked to the current user.",
   operationId: "listMyBranches",
 };
 
 export const orgsDocs: DocumentDecoration = {
   summary: "List organizations",
-  description: "Retrieve list of organizations linked to the current user",
+  description: "List of organizations linked to the current user",
   operationId: "listMyOrganizations",
 };
