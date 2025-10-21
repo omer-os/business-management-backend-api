@@ -2,7 +2,7 @@
   "name": "app",
   "version": "1.0.50",
   "scripts": {
-    "start": "bun src/index.ts",
+    "start": "bun src/app.ts",
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "bun run --watch src/app.ts"
   },
