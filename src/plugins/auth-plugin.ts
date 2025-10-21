@@ -4,7 +4,7 @@ import ApiError from "@src/utils/global-error";
 import Elysia, { t } from "elysia";
 import { UserRole } from "prisma/prismabox/UserRole";
 
-const authPlugin = async (app: Elysia) =>
+export const authPlugin = async (app: Elysia) =>
   app
     .use(
       jwt({
@@ -41,4 +41,10 @@ const authPlugin = async (app: Elysia) =>
         user: { ...user, selectedOrganizationSlug, selectedBranchSlug },
       };
     });
-export { authPlugin };
+
+export const adminCheckPlugin = (app: Elysia) =>
+  app.use(authPlugin).derive(async ({ user }) => {
+    if (!user?.id) throw new ApiError("Unautherized.");
+
+    if (user.role !== "Admin") throw new ApiError("Unautherized call.");
+  });

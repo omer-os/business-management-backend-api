@@ -23,36 +23,50 @@ import {
   adminShowOrgResponse,
   adminUpdateOrgResponse,
 } from "./schemas/response";
+import { adminCheckPlugin } from "@src/plugins/auth-plugin";
+import { admincreateOrgService, adminListAllOrgsService } from "./service";
 
 export const adminOrgRoutes = new Elysia({
   prefix: "/admin/org",
   tags: ["admin (Org)"],
 })
-  .get("/", () => {}, {
-    detail: adminListOrgsDoc,
-    response: adminListOrgsResponse,
-  })
-  .post("/", () => {}, {
-    body: createOrganizationBody,
-    params: organizationSelectParams,
-    detail: adminCreateOrgDoc,
-    response: adminCreateOrgResponse,
-  })
+  .use(adminCheckPlugin)
+  .get(
+    "/",
+    async ({ user }) => {
+      return await adminListAllOrgsService();
+    },
+    {
+      detail: adminListOrgsDoc,
+      response: Response(adminListOrgsResponse),
+    },
+  )
+  .post(
+    "/",
+    async ({ body, user }) => {
+      return await admincreateOrgService(body, user?.id);
+    },
+    {
+      body: createOrganizationBody,
+      detail: adminCreateOrgDoc,
+      response: Response(adminCreateOrgResponse),
+    },
+  )
   .patch("/", () => {}, {
     body: updateOrganizationBody,
     params: organizationSelectParams,
     detail: adminUpdateOrgDoc,
-    response: adminUpdateOrgResponse,
+    response: Response(adminUpdateOrgResponse),
   })
   .delete("/", () => {}, {
     params: organizationSelectParams,
     detail: adminDeleteOrgDoc,
-    response: adminDeleteOrgResponse,
+    response: Response(adminDeleteOrgResponse),
   })
   .get("/show", () => {}, {
     params: organizationSelectParams,
     detail: adminShowOrgDoc,
-    response: adminShowOrgResponse,
+    response: Response(adminShowOrgResponse),
   })
   .get("/branches", () => {}, {
     params: organizationSelectParams,
@@ -61,5 +75,5 @@ export const adminOrgRoutes = new Elysia({
   .get("/members", () => {}, {
     params: organizationSelectParams,
     detail: adminListOrgMembersDoc,
-    response: adminListOrgMembersResponse,
+    response: Response(adminListOrgMembersResponse),
   });

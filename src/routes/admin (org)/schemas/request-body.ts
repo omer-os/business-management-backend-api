@@ -14,6 +14,10 @@ export const createOrganizationBody = t.Object({
     description: "Organization slug",
     examples: ["omaro-llc"],
   }),
+  includeMeAsMember: t.Boolean({
+    default: false,
+    description:"Option to include my account as member of this organization" 
+  }),
 });
 
 export const updateOrganizationBody = t.Object({
