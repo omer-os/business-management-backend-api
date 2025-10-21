@@ -48,9 +48,12 @@ const app = new Elysia()
     }),
   )
 
+  .get("/", () => {
+    return `documentation available in https://business-management-backend-api-production.up.railway.app/docs`;
+  })
   .use(AllRoutes)
 
-  .listen(process.env.PORT??3000);
+  .listen(process.env.PORT ?? 3000);
 
 console.log(
   `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`,
