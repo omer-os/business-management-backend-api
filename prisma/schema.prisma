@@ -5,6 +5,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  // url      = env("PRODUCTION_DATABASE_URL")
 }
 
 generator prismabox {
@@ -47,7 +48,7 @@ model Branch {
   slug String @unique
 
   organizationId String
-  organization   Organization @relation(fields: [organizationId], references: [id])
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   userAccess BranchMembership[]
 
@@ -60,8 +61,8 @@ model BranchMembership {
   userId   String
   branchId String
 
-  user   User   @relation(fields: [userId], references: [id])
-  branch Branch @relation(fields: [branchId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  branch Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
 
   @@unique([userId, branchId])
 }
