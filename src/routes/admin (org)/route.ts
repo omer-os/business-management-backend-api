@@ -3,7 +3,7 @@ import {
   createOrganizationBody,
   updateOrganizationBody,
 } from "./schemas/request-body";
-import { organizationSelectParams } from "./schemas/params";
+import { adminListOrgsQueryParamsSchema, organizationSelectQueryParams } from "./schemas/query-params";
 import {
   adminCreateOrgDoc,
   adminDeleteOrgDoc,
@@ -24,7 +24,15 @@ import {
   adminUpdateOrgResponse,
 } from "./schemas/response";
 import { adminCheckPlugin } from "@src/plugins/auth-plugin";
-import { admincreateOrgService, adminListAllOrgsService } from "./service";
+import {
+  admincreateOrgService,
+  adminDeleteOrgService,
+  adminListAllOrgsService,
+  adminListOrgBranchesService,
+  adminListOrgMembersService,
+  adminShowOrgService,
+  adminUpdateOrgService,
+} from "./service";
 
 export const adminOrgRoutes = new Elysia({
   prefix: "/admin/org",
@@ -33,12 +41,13 @@ export const adminOrgRoutes = new Elysia({
   .use(adminCheckPlugin)
   .get(
     "/",
-    async ({ user }) => {
-      return await adminListAllOrgsService();
+    async ({ user, query }) => {
+      return await adminListAllOrgsService(query);
     },
     {
       detail: adminListOrgsDoc,
       response: Response(adminListOrgsResponse),
+      query: adminListOrgsQueryParamsSchema,
     },
   )
   .post(
@@ -52,28 +61,59 @@ export const adminOrgRoutes = new Elysia({
       response: Response(adminCreateOrgResponse),
     },
   )
-  .patch("/", () => {}, {
-    body: updateOrganizationBody,
-    params: organizationSelectParams,
-    detail: adminUpdateOrgDoc,
-    response: Response(adminUpdateOrgResponse),
-  })
-  .delete("/", () => {}, {
-    params: organizationSelectParams,
-    detail: adminDeleteOrgDoc,
-    response: Response(adminDeleteOrgResponse),
-  })
-  .get("/show", () => {}, {
-    params: organizationSelectParams,
-    detail: adminShowOrgDoc,
-    response: Response(adminShowOrgResponse),
-  })
-  .get("/branches", () => {}, {
-    params: organizationSelectParams,
-    detail: adminListOrgBranchesResponse,
-  })
-  .get("/members", () => {}, {
-    params: organizationSelectParams,
-    detail: adminListOrgMembersDoc,
-    response: Response(adminListOrgMembersResponse),
-  });
+  .patch(
+    "/",
+    async ({ body, query }) => {
+      return await adminUpdateOrgService(query, body);
+    },
+    {
+      body: updateOrganizationBody,
+      query: organizationSelectQueryParams,
+      detail: adminUpdateOrgDoc,
+      response: Response(adminUpdateOrgResponse),
+    },
+  )
+  .delete(
+    "/",
+    async ({ query }) => {
+      return await adminDeleteOrgService(query);
+    },
+    {
+      query: organizationSelectQueryParams,
+      detail: adminDeleteOrgDoc,
+      response: Response(adminDeleteOrgResponse),
+    },
+  )
+  .get(
+    "/show",
+    async ({ query }) => {
+      return await adminShowOrgService(query);
+    },
+    {
+      query: organizationSelectQueryParams,
+      detail: adminShowOrgDoc,
+      response: Response(adminShowOrgResponse),
+    },
+  )
+  .get(
+    "/branches",
+    async ({ query }) => {
+      return await adminListOrgBranchesService(query);
+    },
+    {
+      query: organizationSelectQueryParams,
+      detail: adminListOrgBranchesDoc,
+      response: Response(adminListOrgBranchesResponse),
+    },
+  )
+  .get(
+    "/members",
+    async ({ query }) => {
+      return await adminListOrgMembersService(query);
+    },
+    {
+      query: organizationSelectQueryParams,
+      detail: adminListOrgMembersDoc,
+      response: Response(adminListOrgMembersResponse),
+    },
+  );
