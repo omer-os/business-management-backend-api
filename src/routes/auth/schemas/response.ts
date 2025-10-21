@@ -28,7 +28,6 @@ const getMeResponse = t.Object({
   id: t.String(),
   name: t.String(),
   email: t.String(),
-  password: t.String(),
   role: t.Union([t.Literal("Admin"), t.Literal("User")], {
     additionalProperties: false,
   }),

@@ -44,15 +44,13 @@ const app = new Elysia()
             "Backend api documentation built for future saas with orgs branches and users.",
         },
       },
-      path: "/docs",
     }),
   )
 
   .get("/", () => {
-    return `documentation available in https://business-management-backend-api-production.up.railway.app/docs`;
+    return `documentation available in https://business-management-backend-api-production.up.railway.app/openapi`;
   })
   .use(AllRoutes)
-
   .listen(process.env.PORT ?? 3000);
 
 console.log(
