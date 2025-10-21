@@ -18,6 +18,7 @@ export const admincreateOrgService = async (
   body: Static<typeof createOrganizationBody>,
   userId: string | undefined,
 ) => {
+  const { includeMeAsMember, ...orgArgs } = body;
   // first check if organization with this slug exists
   const check = await db.organization.findUnique({
     where: {
@@ -28,9 +29,7 @@ export const admincreateOrgService = async (
     throw new ApiError("Organization with this slug already exists");
 
   const newOrg = await db.organization.create({
-    data: {
-      ...body,
-    },
+    data: orgArgs,
   });
 
   if (!newOrg?.id)
