@@ -1,7 +1,7 @@
 import { DocumentDecoration } from "elysia";
 
 export const adminListOrgsDoc: DocumentDecoration = {
-  summary: "list organization",
+  summary: "list organizations",
   description: "List all rganizations",
   operationId: "adminListOrgs",
 };
