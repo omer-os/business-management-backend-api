@@ -158,6 +158,10 @@ export const adminDeleteBranchService = async (
 export const adminShowBranchService = async (
   params: Static<typeof branchSelectQueryParams>,
 ) => {
+  // if the params not given return error
+  if (!params.id && !params.slug)
+    throw new ApiError("please provide id or slug of the branch.");
+
   const branch = await db.branch.findFirst({
     where: {
       slug: params.slug,
