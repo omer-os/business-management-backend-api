@@ -25,6 +25,18 @@ export const refreshDocs: DocumentDecoration = {
   operationId: "refreshTokens",
 };
 
+export const forgotPasswordDocs: DocumentDecoration = {
+  summary: "Forgot password",
+  description: "Sends Email to reset users password.",
+  operationId: "forgotPassword",
+};
+
+export const resetPasswordDocs: DocumentDecoration = {
+  summary: "Reset Password",
+  description: "Resets user password if aligable.",
+  operationId: "resetPassword",
+};
+
 export const meDocs: DocumentDecoration = {
   summary: "Get current user info",
   description: "Return details of the authenticated user",

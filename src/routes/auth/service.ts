@@ -11,6 +11,7 @@ import db from "@src/utils/db";
 import ApiError from "@src/utils/global-error";
 import { ElysiaCookie, Cookie } from "elysia/dist/cookies";
 import { $Enums, User } from "@prisma/client";
+import { sendPasswordResetEmail } from "@src/utils/email";
 
 export const signup = async (data: Static<typeof signupBody>) => {
   const { email, name, password } = data;
@@ -225,5 +226,54 @@ export const getOrgs = async (user: User | undefined) => {
     success: true,
     message: "Organizations listed successfully",
     data: orgs,
+  };
+};
+
+export const authcheckIfUserExists = async (email: string) => {
+  const user = await db.user.findUnique({
+    where: { email },
+  });
+  if (!user?.id)
+    throw new ApiError("User with this email address doesn't exist.");
+
+  return user;
+};
+
+export const forgotPassword = async (email: string, resetToken: string) => {
+  await sendPasswordResetEmail(email, resetToken);
+
+  return {
+    success: true,
+    message: "Password reset email sent successfully.",
+    data: null,
+  };
+};
+export const resetPassword = async (
+  userId: string,
+  newPassword: string,
+  ref: string,
+) => {
+  // Check if user exists and ref matches current password hash
+  const userCheck = await db.user.findUnique({
+    where: { id: userId },
+  });
+  if (!userCheck?.id) throw new ApiError("User not found.");
+
+  // Check if token's ref matches current password (if not, password was already changed)
+  if (userCheck.password.substring(0, 10) !== ref)
+    throw new ApiError("Token already used or invalid.");
+
+  // Update password - this will invalidate the token
+  await db.user.update({
+    where: { id: userId },
+    data: {
+      password: await Bun.password.hash(newPassword),
+    },
+  });
+
+  return {
+    success: true,
+    message: "Password reset successfully.",
+    data: null,
   };
 };

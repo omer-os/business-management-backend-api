@@ -9,7 +9,7 @@ export const authPlugin = async (app: Elysia) =>
     .use(
       jwt({
         name: "jwt",
-        secret: Bun.env.JWT_SECERET!,
+        secret: Bun.env.JWT_SECRET!,
         schema: t.Object({
           sub: t.String(),
           role: UserRole,

@@ -1,4 +1,5 @@
 import Elysia, { t } from "elysia";
+import { rateLimit } from "elysia-rate-limit";
 import {
   signinDocs,
   signupDocs,
@@ -9,18 +10,25 @@ import {
   switchBranchDocs,
   branchesDocs,
   orgsDocs,
+  forgotPasswordDocs,
+  resetPasswordDocs,
 } from "./docs/docs";
 import {
+  forgotPasswordBodySchema,
+  resetPasswordBodySchema,
   signinBody,
   signupBody,
   switchBranchBody,
   switchOrgBody,
 } from "./schemas/request-body";
 import {
+  authcheckIfUserExists,
+  forgotPassword,
   getBranches,
   getOrgs,
   me,
   refreshTokens,
+  resetPassword,
   signin,
   signout,
   signup,
@@ -45,6 +53,9 @@ import {
 import { UserRole } from "prisma/prismabox/UserRole";
 import ApiError from "@src/utils/global-error";
 import { authPlugin } from "@src/plugins/auth-plugin";
+import db from "@src/utils/db";
+import { sendPasswordResetEmail } from "@src/utils/email";
+import { authRoutesRateLimit, forgotPasswordLimit } from "@src/utils/constants";
 
 export const authRoutes = new Elysia({
   prefix: "/auth",
@@ -57,7 +68,7 @@ export const authRoutes = new Elysia({
   .use(
     jwt({
       name: "jwt",
-      secret: Bun.env.JWT_SECERET!,
+      secret: Bun.env.JWT_SECRET!,
       schema: t.Object({
         sub: t.String(),
         role: UserRole,
@@ -70,7 +81,7 @@ export const authRoutes = new Elysia({
   .use(
     jwt({
       name: "refreshJwt",
-      secret: Bun.env.JWT_SECERET!,
+      secret: Bun.env.JWT_SECRET!,
       schema: t.Object({
         sub: t.String(),
         role: UserRole,
@@ -80,54 +91,72 @@ export const authRoutes = new Elysia({
       exp: "5d",
     }),
   )
-  .post(
-    "/sign-in",
-    async ({
-      body,
-      jwt,
-      refreshJwt,
-      cookie: { accessToken, refreshToken },
-    }) => {
-      const user = await signin(body);
-
-      const payload = { sub: user.data.id, role: user.data.role };
-
-      const signedAccessToken = await jwt.sign(payload);
-      if (!signedAccessToken)
-        throw new ApiError("Error while trying to sign access token");
-
-      const signedRefreshToken = await refreshJwt.sign(payload);
-      if (!signedRefreshToken)
-        throw new ApiError("Error while trying to sign refresh token");
-
-      accessToken.set({
-        value: signedAccessToken.toString(),
-        maxAge: 60 * 60,
-      });
-      refreshToken.set({
-        value: signedRefreshToken.toString(),
-        maxAge: 5 * 24 * 60 * 60,
-      });
-
-      return user;
-    },
-    {
-      detail: signinDocs,
-      body: signinBody,
-      response: Response(signinResponse),
-    },
+  .use(
+    jwt({
+      name: "resetJwt",
+      secret: Bun.env.JWT_SECRET!,
+      schema: t.Object({
+        sub: t.String(),
+        type: t.Literal("password-reset"),
+        ref: t.String(),
+      }),
+      exp: "15m",
+    }),
   )
-  .post(
-    "/sign-up",
-    async ({ body }) => {
-      return await signup(body);
-    },
-    {
-      detail: signupDocs,
-      body: signupBody,
-      response: Response(signupResponse),
-    },
+
+  .group("", (app) =>
+    app
+      .use(authRoutesRateLimit)
+      .post(
+        "/sign-in",
+        async ({
+          body,
+          jwt,
+          refreshJwt,
+          cookie: { accessToken, refreshToken },
+        }) => {
+          const user = await signin(body);
+
+          const payload = { sub: user.data.id, role: user.data.role };
+
+          const signedAccessToken = await jwt.sign(payload);
+          if (!signedAccessToken)
+            throw new ApiError("Error while trying to sign access token");
+
+          const signedRefreshToken = await refreshJwt.sign(payload);
+          if (!signedRefreshToken)
+            throw new ApiError("Error while trying to sign refresh token");
+
+          accessToken.set({
+            value: signedAccessToken.toString(),
+            maxAge: 60 * 60,
+          });
+          refreshToken.set({
+            value: signedRefreshToken.toString(),
+            maxAge: 5 * 24 * 60 * 60,
+          });
+
+          return user;
+        },
+        {
+          detail: signinDocs,
+          body: signinBody,
+          response: Response(signinResponse),
+        },
+      )
+      .post(
+        "/sign-up",
+        async ({ body }) => {
+          return await signup(body);
+        },
+        {
+          detail: signupDocs,
+          body: signupBody,
+          response: Response(signupResponse),
+        },
+      ),
   )
+
   .get(
     "/sign-out",
     async ({ cookie: { accessToken, refreshToken } }) => {
@@ -179,6 +208,22 @@ export const authRoutes = new Elysia({
     {
       detail: refreshDocs,
       response: Response(refreshTokensResponse),
+    },
+  )
+  .post(
+    "/reset-password",
+    async ({ body, resetJwt }) => {
+      const verify = await resetJwt.verify(body.token);
+      if (!verify || verify.type !== "password-reset")
+        throw new ApiError("Invalid or expired token.");
+      const res = await resetPassword(verify.sub, body.newPassword, verify.ref);
+
+      return res;
+    },
+    {
+      detail: resetPasswordDocs,
+      body: resetPasswordBodySchema,
+      response: Response(t.Null()),
     },
   )
 
@@ -298,5 +343,27 @@ export const authRoutes = new Elysia({
     {
       detail: orgsDocs,
       response: Response(listOrgsResponse),
+    },
+  )
+
+  .use(forgotPasswordLimit)
+  .post(
+    "/forgot-password",
+    async ({ body, resetJwt }) => {
+      // check if user exists
+      const user = await authcheckIfUserExists(body.email);
+
+      const jwtPayload = await resetJwt.sign({
+        sub: user.id,
+        type: "password-reset",
+        ref: user.password.substring(0, 10),
+      });
+
+      return await forgotPassword(body.email, jwtPayload);
+    },
+    {
+      detail: forgotPasswordDocs,
+      body: forgotPasswordBodySchema,
+      response: Response(t.Null()),
     },
   );

@@ -20,6 +20,26 @@ export const signupBody = t.Object({
   }),
 });
 
+export const forgotPasswordBodySchema = t.Object({
+  email: t.String({
+    format: "email",
+    description: "Email address to send reset link",
+    examples: ["omerchetin19@gmail.com"],
+  }),
+});
+
+export const resetPasswordBodySchema = t.Object({
+  token: t.String({
+    description: "Password reset token from email",
+  }),
+  newPassword: t.String({
+    minLength: 6,
+    maxLength: 100,
+    description: "New password (6-100 characters)",
+    examples: ["newpassword123"],
+  }),
+});
+
 export const signinBody = t.Object({
   email: t.String({
     format: "email",
