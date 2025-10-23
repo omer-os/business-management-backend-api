@@ -37,9 +37,11 @@ export const adminUserRoutes = new Elysia({
   tags: ["admin (User)"],
 })
   .use(adminCheckPlugin)
+
   .get(
-    "/",
+    "/test-list",
     async ({ query }) => {
+      console.log("query --->", query);
       return await adminListAllUsersService(query);
     },
     {

@@ -5,7 +5,7 @@ import { rateLimit } from "elysia-rate-limit";
 import { logger } from "@bogeychan/elysia-logger";
 
 const app = new Elysia()
-  .use(logger({}))
+  // .use(logger({}))
   .use(
     rateLimit({
       max: 50,

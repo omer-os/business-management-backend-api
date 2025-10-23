@@ -210,21 +210,50 @@ export const authRoutes = new Elysia({
       response: Response(refreshTokensResponse),
     },
   )
-  .post(
-    "/reset-password",
-    async ({ body, resetJwt }) => {
-      const verify = await resetJwt.verify(body.token);
-      if (!verify || verify.type !== "password-reset")
-        throw new ApiError("Invalid or expired token.");
-      const res = await resetPassword(verify.sub, body.newPassword, verify.ref);
 
-      return res;
-    },
-    {
-      detail: resetPasswordDocs,
-      body: resetPasswordBodySchema,
-      response: Response(t.Null()),
-    },
+  .group("", (app) =>
+    app
+      .use(forgotPasswordLimit)
+      .post(
+        "/forgot-password",
+        async ({ body, resetJwt }) => {
+          // check if user exists
+          const user = await authcheckIfUserExists(body.email);
+
+          const jwtPayload = await resetJwt.sign({
+            sub: user.id,
+            type: "password-reset",
+            ref: user.password.substring(0, 10),
+          });
+
+          return await forgotPassword(body.email, jwtPayload);
+        },
+        {
+          detail: forgotPasswordDocs,
+          body: forgotPasswordBodySchema,
+          response: Response(t.Null()),
+        },
+      )
+      .post(
+        "/reset-password",
+        async ({ body, resetJwt }) => {
+          const verify = await resetJwt.verify(body.token);
+          if (!verify || verify.type !== "password-reset")
+            throw new ApiError("Invalid or expired token.");
+          const res = await resetPassword(
+            verify.sub,
+            body.newPassword,
+            verify.ref,
+          );
+
+          return res;
+        },
+        {
+          detail: resetPasswordDocs,
+          body: resetPasswordBodySchema,
+          response: Response(t.Null()),
+        },
+      ),
   )
 
   .use(authPlugin)
@@ -343,27 +372,5 @@ export const authRoutes = new Elysia({
     {
       detail: orgsDocs,
       response: Response(listOrgsResponse),
-    },
-  )
-
-  .use(forgotPasswordLimit)
-  .post(
-    "/forgot-password",
-    async ({ body, resetJwt }) => {
-      // check if user exists
-      const user = await authcheckIfUserExists(body.email);
-
-      const jwtPayload = await resetJwt.sign({
-        sub: user.id,
-        type: "password-reset",
-        ref: user.password.substring(0, 10),
-      });
-
-      return await forgotPassword(body.email, jwtPayload);
-    },
-    {
-      detail: forgotPasswordDocs,
-      body: forgotPasswordBodySchema,
-      response: Response(t.Null()),
     },
   );
