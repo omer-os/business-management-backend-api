@@ -44,5 +44,4 @@ package-lock.json
 /src/generated/prisma
 
 
-app.py
-codebase.txt
+codebase.xml

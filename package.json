@@ -20,7 +20,8 @@
   },
   "devDependencies": {
     "bun-types": "latest",
-    "prisma": "^6.17.1"
+    "prisma": "^6.17.1",
+    "repomix": "^1.8.0"
   },
   "module": "src/app.js"
 }

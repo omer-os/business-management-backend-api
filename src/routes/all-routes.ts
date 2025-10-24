@@ -5,6 +5,7 @@ import { authRoutes } from "./auth/route";
 import { adminUserRoutes } from "./admin (user)/route";
 import { businessMenuRoutes } from "./buisness (menu)/route";
 import { businessCategoryRoutes } from "./business (category)/route";
+import { businessItemRoutes } from "./business (item)/route";
 
 const AllRoutes = new Elysia()
   .use(authRoutes)
@@ -12,6 +13,7 @@ const AllRoutes = new Elysia()
   .use(adminBranchRoutes)
   .use(adminUserRoutes)
   .use(businessMenuRoutes)
-  .use(businessCategoryRoutes);
+  .use(businessCategoryRoutes)
+  .use(businessItemRoutes);
 
 export default AllRoutes;
