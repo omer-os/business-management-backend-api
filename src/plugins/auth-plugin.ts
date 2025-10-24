@@ -48,3 +48,11 @@ export const adminCheckPlugin = (app: Elysia) =>
 
     if (user.role !== "Admin") throw new ApiError("Unautherized call.");
   });
+
+export const businessPlugin = async (app: Elysia) =>
+  app.use(authPlugin).derive(async ({ user }) => {
+    if (!user?.id) throw new ApiError("User Doesnt Exists, Unautherized call");
+
+    if (!user.selectedBranchSlug)
+      throw new ApiError("Please select branch first.");
+  });

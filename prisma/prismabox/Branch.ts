@@ -27,6 +27,45 @@ export const BranchRelations = t.Object(
       ),
       { additionalProperties: false },
     ),
+    menus: t.Array(
+      t.Object(
+        {
+          id: t.String(),
+          name: t.Any({ description: `[LocalString]` }),
+          theme: __nullable__(t.Any({ description: `[ThemeConfig]` })),
+          menuStructure: t.Array(t.Any({ description: `[menuStructure]` }), {
+            additionalProperties: false,
+          }),
+          branchId: __nullable__(t.String()),
+          createdAt: t.Date(),
+          updatedAt: t.Date(),
+        },
+        { additionalProperties: false },
+      ),
+      { additionalProperties: false },
+    ),
+    categories: t.Array(
+      t.Object(
+        {
+          id: t.String(),
+          name: t.Any({ description: `[LocalString]` }),
+          branchId: __nullable__(t.String()),
+        },
+        { additionalProperties: false },
+      ),
+      { additionalProperties: false },
+    ),
+    items: t.Array(
+      t.Object(
+        {
+          id: t.String(),
+          name: t.Any({ description: `[LocalString]` }),
+          branchId: __nullable__(t.String()),
+        },
+        { additionalProperties: false },
+      ),
+      { additionalProperties: false },
+    ),
   },
   { additionalProperties: false },
 );
@@ -70,6 +109,54 @@ export const BranchRelationsInputCreate = t.Object(
         { additionalProperties: false },
       ),
     ),
+    menus: t.Optional(
+      t.Object(
+        {
+          connect: t.Array(
+            t.Object(
+              {
+                id: t.String({ additionalProperties: false }),
+              },
+              { additionalProperties: false },
+            ),
+            { additionalProperties: false },
+          ),
+        },
+        { additionalProperties: false },
+      ),
+    ),
+    categories: t.Optional(
+      t.Object(
+        {
+          connect: t.Array(
+            t.Object(
+              {
+                id: t.String({ additionalProperties: false }),
+              },
+              { additionalProperties: false },
+            ),
+            { additionalProperties: false },
+          ),
+        },
+        { additionalProperties: false },
+      ),
+    ),
+    items: t.Optional(
+      t.Object(
+        {
+          connect: t.Array(
+            t.Object(
+              {
+                id: t.String({ additionalProperties: false }),
+              },
+              { additionalProperties: false },
+            ),
+            { additionalProperties: false },
+          ),
+        },
+        { additionalProperties: false },
+      ),
+    ),
   },
   { additionalProperties: false },
 );
@@ -89,6 +176,81 @@ export const BranchRelationsInputUpdate = t.Partial(
         { additionalProperties: false },
       ),
       userAccess: t.Partial(
+        t.Object(
+          {
+            connect: t.Array(
+              t.Object(
+                {
+                  id: t.String({ additionalProperties: false }),
+                },
+                { additionalProperties: false },
+              ),
+              { additionalProperties: false },
+            ),
+            disconnect: t.Array(
+              t.Object(
+                {
+                  id: t.String({ additionalProperties: false }),
+                },
+                { additionalProperties: false },
+              ),
+              { additionalProperties: false },
+            ),
+          },
+          { additionalProperties: false },
+        ),
+      ),
+      menus: t.Partial(
+        t.Object(
+          {
+            connect: t.Array(
+              t.Object(
+                {
+                  id: t.String({ additionalProperties: false }),
+                },
+                { additionalProperties: false },
+              ),
+              { additionalProperties: false },
+            ),
+            disconnect: t.Array(
+              t.Object(
+                {
+                  id: t.String({ additionalProperties: false }),
+                },
+                { additionalProperties: false },
+              ),
+              { additionalProperties: false },
+            ),
+          },
+          { additionalProperties: false },
+        ),
+      ),
+      categories: t.Partial(
+        t.Object(
+          {
+            connect: t.Array(
+              t.Object(
+                {
+                  id: t.String({ additionalProperties: false }),
+                },
+                { additionalProperties: false },
+              ),
+              { additionalProperties: false },
+            ),
+            disconnect: t.Array(
+              t.Object(
+                {
+                  id: t.String({ additionalProperties: false }),
+                },
+                { additionalProperties: false },
+              ),
+              { additionalProperties: false },
+            ),
+          },
+          { additionalProperties: false },
+        ),
+      ),
+      items: t.Partial(
         t.Object(
           {
             connect: t.Array(
@@ -208,6 +370,9 @@ export const BranchSelect = t.Partial(
       organizationId: t.Boolean(),
       organization: t.Boolean(),
       userAccess: t.Boolean(),
+      menus: t.Boolean(),
+      categories: t.Boolean(),
+      items: t.Boolean(),
       _count: t.Boolean(),
     },
     { additionalProperties: false },
@@ -216,7 +381,14 @@ export const BranchSelect = t.Partial(
 
 export const BranchInclude = t.Partial(
   t.Object(
-    { organization: t.Boolean(), userAccess: t.Boolean(), _count: t.Boolean() },
+    {
+      organization: t.Boolean(),
+      userAccess: t.Boolean(),
+      menus: t.Boolean(),
+      categories: t.Boolean(),
+      items: t.Boolean(),
+      _count: t.Boolean(),
+    },
     { additionalProperties: false },
   ),
 );

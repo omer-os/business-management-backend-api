@@ -48,7 +48,12 @@ const app = new Elysia()
   )
 
   .get("/", () => {
-    return `documentation available in https://business-management-backend-api-production.up.railway.app/openapi`;
+    return {
+      success: true,
+      data: null,
+      message:
+        "Backend is up and running, see docs in https://business-management-backend-api-production.up.railway.app/openapi",
+    };
   })
   .use(AllRoutes)
   .listen(process.env.PORT ?? 3000);
