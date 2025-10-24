@@ -1,10 +1,13 @@
 import db from "@src/utils/db";
 import { Static } from "elysia";
-
 import {
   businessListMenusQueryParams,
   menuSelectQueryParams,
 } from "./schemas/query-params";
+import {
+  businessCreateMenuSchema,
+  businessUpdateMenuSchema,
+} from "./schemas/request-body";
 import ApiError from "@src/utils/global-error";
 
 export const businessListMenusService = async (
@@ -16,6 +19,7 @@ export const businessListMenusService = async (
   const menus = await db.menu.findMany({
     where: {
       id: params.id,
+      slug: params.slug,
       Branch: {
         slug: branchSlug,
       },
@@ -38,6 +42,7 @@ export const businessShowMenuService = async (
   const menu = await db.menu.findFirst({
     where: {
       id: params.id,
+      slug: params.slug,
       Branch: {
         slug: branchSlug,
       },
@@ -52,6 +57,7 @@ export const businessShowMenuService = async (
     data: menu,
   };
 };
+
 export const businessCreateMenuService = async (
   branchSlug: string | undefined,
   body: Static<typeof businessCreateMenuSchema>,
@@ -63,10 +69,16 @@ export const businessCreateMenuService = async (
   });
   if (!branch?.id) throw new ApiError("Branch not found");
 
+  const check = await db.menu.findUnique({
+    where: { slug: body.slug },
+  });
+  if (check?.id) throw new ApiError("Menu with this slug already exists");
+
   const newMenu = await db.menu.create({
     data: {
+      slug: body.slug,
       name: body.name,
-      theme: body.theme || null,
+      theme: body.theme,
       menuStructure: body.menuStructure || [],
       branchId: branch.id,
     },
@@ -91,6 +103,7 @@ export const businessUpdateMenuService = async (
   const menu = await db.menu.findFirst({
     where: {
       id: params.id,
+      slug: params.slug,
       Branch: {
         slug: branchSlug,
       },
@@ -98,6 +111,16 @@ export const businessUpdateMenuService = async (
   });
 
   if (!menu?.id) throw new ApiError("Menu not found in this branch");
+
+  if (body.slug) {
+    const existingSlugMenu = await db.menu.findUnique({
+      where: { slug: body.slug },
+    });
+
+    if (existingSlugMenu && existingSlugMenu.id !== menu.id) {
+      throw new ApiError("Menu with this slug already exists");
+    }
+  }
 
   const updatedMenu = await db.menu.update({
     where: { id: menu.id },
@@ -123,6 +146,7 @@ export const businessDeleteMenuService = async (
   const menu = await db.menu.findFirst({
     where: {
       id: params.id,
+      slug: params.slug,
       Branch: {
         slug: branchSlug,
       },

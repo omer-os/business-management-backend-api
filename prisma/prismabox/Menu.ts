@@ -7,6 +7,7 @@ import { __nullable__ } from "./__nullable__";
 export const MenuPlain = t.Object(
   {
     id: t.String(),
+    slug: t.String(),
     name: t.Any({ description: `[LocalString]` }),
     theme: __nullable__(t.Any({ description: `[ThemeConfig]` })),
     menuStructure: t.Array(t.Any({ description: `[menuStructure]` }), {
@@ -38,6 +39,7 @@ export const MenuRelations = t.Object(
 
 export const MenuPlainInputCreate = t.Object(
   {
+    slug: t.String(),
     name: t.Any({ description: `[LocalString]` }),
     theme: t.Optional(__nullable__(t.Any({ description: `[ThemeConfig]` }))),
     menuStructure: t.Array(t.Any({ description: `[menuStructure]` }), {
@@ -49,6 +51,7 @@ export const MenuPlainInputCreate = t.Object(
 
 export const MenuPlainInputUpdate = t.Object(
   {
+    slug: t.Optional(t.String()),
     name: t.Optional(t.Any({ description: `[LocalString]` })),
     theme: t.Optional(__nullable__(t.Any({ description: `[ThemeConfig]` }))),
     menuStructure: t.Optional(
@@ -110,6 +113,7 @@ export const MenuWhere = t.Partial(
           NOT: t.Union([Self, t.Array(Self, { additionalProperties: false })]),
           OR: t.Array(Self, { additionalProperties: false }),
           id: t.String(),
+          slug: t.String(),
           name: t.Any({ description: `[LocalString]` }),
           theme: t.Any({ description: `[ThemeConfig]` }),
           menuStructure: t.Array(t.Any({ description: `[menuStructure]` }), {
@@ -130,12 +134,16 @@ export const MenuWhereUnique = t.Recursive(
     t.Intersect(
       [
         t.Partial(
-          t.Object({ id: t.String() }, { additionalProperties: false }),
+          t.Object(
+            { id: t.String(), slug: t.String() },
+            { additionalProperties: false },
+          ),
           { additionalProperties: false },
         ),
-        t.Union([t.Object({ id: t.String() })], {
-          additionalProperties: false,
-        }),
+        t.Union(
+          [t.Object({ id: t.String() }), t.Object({ slug: t.String() })],
+          { additionalProperties: false },
+        ),
         t.Partial(
           t.Object({
             AND: t.Union([
@@ -154,6 +162,7 @@ export const MenuWhereUnique = t.Recursive(
           t.Object(
             {
               id: t.String(),
+              slug: t.String(),
               name: t.Any({ description: `[LocalString]` }),
               theme: t.Any({ description: `[ThemeConfig]` }),
               menuStructure: t.Array(
@@ -177,6 +186,7 @@ export const MenuSelect = t.Partial(
   t.Object(
     {
       id: t.Boolean(),
+      slug: t.Boolean(),
       name: t.Boolean(),
       theme: t.Boolean(),
       menuStructure: t.Boolean(),
@@ -201,6 +211,9 @@ export const MenuOrderBy = t.Partial(
   t.Object(
     {
       id: t.Union([t.Literal("asc"), t.Literal("desc")], {
+        additionalProperties: false,
+      }),
+      slug: t.Union([t.Literal("asc"), t.Literal("desc")], {
         additionalProperties: false,
       }),
       name: t.Union([t.Literal("asc"), t.Literal("desc")], {

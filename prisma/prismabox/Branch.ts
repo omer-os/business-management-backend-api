@@ -31,6 +31,7 @@ export const BranchRelations = t.Object(
       t.Object(
         {
           id: t.String(),
+          slug: t.String(),
           name: t.Any({ description: `[LocalString]` }),
           theme: __nullable__(t.Any({ description: `[ThemeConfig]` })),
           menuStructure: t.Array(t.Any({ description: `[menuStructure]` }), {

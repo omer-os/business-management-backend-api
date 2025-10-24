@@ -14,16 +14,26 @@ const ThemeConfigSchema = t.Object({
 const StructureNodeSchema: any = t.Object({
   type: t.Union([t.Literal("category"), t.Literal("item")]),
   id: t.String(),
-  children: t.Optional(t.Array(t.Any())), // Recursive type
+  children: t.Optional(t.Array(t.Any())),
 });
 
 export const businessCreateMenuSchema = t.Object({
+  slug: t.String({
+    format: "uri-reference",
+    description: "Menu slug",
+  }),
   name: LocalStringSchema,
   theme: t.Optional(ThemeConfigSchema),
   menuStructure: t.Optional(t.Array(StructureNodeSchema)),
 });
 
 export const businessUpdateMenuSchema = t.Object({
+  slug: t.Optional(
+    t.String({
+      format: "uri-reference",
+      description: "Menu slug",
+    }),
+  ),
   name: t.Optional(LocalStringSchema),
   theme: t.Optional(ThemeConfigSchema),
   menuStructure: t.Optional(t.Array(StructureNodeSchema)),

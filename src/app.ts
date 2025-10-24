@@ -3,9 +3,11 @@ import { Elysia } from "elysia";
 import AllRoutes from "./routes/all-routes";
 import { rateLimit } from "elysia-rate-limit";
 import { logger } from "@bogeychan/elysia-logger";
+import { cors } from "@elysiajs/cors";
 
 const app = new Elysia()
-  // .use(logger({}))
+  .use(cors())
+  .use(logger({}))
   .use(
     rateLimit({
       max: 50,
@@ -14,7 +16,6 @@ const app = new Elysia()
   )
   .onError(({ code, error, status }) => {
     if (code === "VALIDATION") {
-      // console.log();
       return {
         success: false,
         message: `Validation Error, ${error.all.map((i) => i.summary).join(", ")}`,

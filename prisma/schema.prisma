@@ -74,7 +74,8 @@ model BranchMembership {
 }
 
 model Menu {
-  id String @id @default(uuid())
+  id   String @id @default(uuid())
+  slug String @unique
 
   /// [LocalString]
   name Json
